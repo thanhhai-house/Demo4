@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>THỐNG KÊ PHỤ TÙNG</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" aria-label="logo"></div>
+      <div class="brandText">
+        <div class="title">THỐNG KÊ PHỤ TÙNG</div>
+        <div class="subtitle">Kho &amp; Cửa hàng • Nhập/Xuất theo OEM • Báo giá PDF</div>
+      </div>
+    </div>
+
+    <div class="topActions">
+      <button class="pillBtn active" id="btnKho">KHO</button>
+      <button class="pillBtn" id="btnStore">CỬA HÀNG</button>
+      <button class="pillBtn" id="btnToken">TOKEN</button>
+      <button class="iconBtn" id="btnMenu" title="Menu">☰</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="actionBar">
+      <button class="btn primary" id="btnBaoGia">BÁO GIÁ</button>
+
+      <div class="searchBox">
+        <input id="q" placeholder="Tra theo OEM / OEM thay thế / Tên / Loại / Hãng..." />
+      </div>
+
+      <button class="btn dark" id="btnSearch">Tra cứu</button>
+      <button class="btn ghost" id="btnRefresh">Làm mới</button>
+      <button class="btn green" id="btnIn">Nhập hàng</button>
+      <button class="btn red" id="btnOut">Xuất hàng</button>
+    </section>
+
+    <section class="subline">
+      <div class="left">Đang xem: <b id="viewMode">KHO</b></div>
+      <div class="right">Tick checkbox để chọn • Nhập/Xuất sẽ dùng danh sách đã tick</div>
+    </section>
+
+    <section class="card">
+      <div class="cardHead">
+        <div class="cardTitle">Kết quả tra cứu (<span id="resultLabel">ALL</span>)</div>
+        <div class="cardRight">
+          <div class="badge">Đã chọn báo giá: <b id="picked">0</b></div>
+          <button class="btn ghost" id="btnClearPicked" title="Bỏ chọn hết">Bỏ chọn</button>
+        </div>
+      </div>
+
+      <div class="tableWrap">
+        <table id="productsTable">
+          <thead>
+            <tr>
+              <th class="colCheck"><input type="checkbox" id="checkAll" title="Chọn tất cả" /></th>
+              <th class="colImg">img</th>
+              <th>id</th>
+              <th>oem</th>
+              <th>oem_alt</th>
+              <th>name</th>
+              <th>brand</th>
+              <th>category</th>
+              <th class="colNum">price</th>
+              <th>desc</th>
+            </tr>
+          </thead>
+          <tbody id="productsTbody">
+            <tr>
+              <td colspan="10" class="emptyRow">
+                Chưa có dữ liệu. Bấm <b>TOKEN</b> để nhập token, rồi bấm <b>Tra cứu</b>.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="belowTable">
+        <div class="hint">Click dòng để tick nhanh • Click thumbnail để xem ảnh to</div>
+        <div class="rightActions">
+          <button class="btn dark" id="btnViewPicked">Xem danh sách đã chọn</button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footerPills">
+      <div class="footPill">thống kê phụ tùng • Nhập/Xuất theo OEM • Báo giá PDF •</div>
+      <div class="footPill">@2025 hải võ • Thống kê phụ tùng • Nhập/Xuất theo OEM • Báo giá PDF •</div>
+    </footer>
+  </main>
+
+  <!-- TOKEN MODAL (chỉ nhập token) -->
+  <div class="modalOverlay hidden" id="tokenModal">
+    <div class="modal">
+      <div class="modalHead">
+        <div>
+          <div class="modalTitle">TOKEN / KẾT NỐI</div>
+          <div class="modalSub">WebApp URL đã được gắn sẵn trong app.js • bạn chỉ cần token</div>
+        </div>
+        <button class="iconBtn" id="btnCloseToken" title="Đóng">✕</button>
+      </div>
+
+      <div class="modalBody">
+        <label class="field">
+          <span>Token (mật khẩu)</span>
+          <div class="pwRow">
+            <input id="token" type="password" placeholder="vd: abc123" />
+            <button class="btn ghost" id="btnToggleToken" type="button">Hiện</button>
+          </div>
+          <small>Lấy token trong sheet <b>TOKENS</b></small>
+        </label>
+
+        <div class="modalActions">
+          <span class="pill" id="authState">chưa kết nối</span>
+          <div class="grow"></div>
+          <button class="btn ghost" id="btnClearToken" type="button">Xóa token</button>
+          <button class="btn dark" id="btnConnect" type="button">Xác nhận</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMAGE PREVIEW MODAL -->
+  <div class="modalOverlay hidden" id="imgModal">
+    <div class="modal big">
+      <div class="modalHead">
+        <div>
+          <div class="modalTitle" id="imgTitle">Ảnh sản phẩm</div>
+          <div class="modalSub" id="imgSub"></div>
+        </div>
+        <button class="iconBtn" id="btnCloseImg" title="Đóng">✕</button>
+      </div>
+      <div class="modalBody">
+        <div class="imgPreviewWrap">
+          <img id="imgPreview" alt="preview" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PICKED MODAL -->
+  <div class="modalOverlay hidden" id="pickedModal">
+    <div class="modal big">
+      <div class="modalHead">
+        <div>
+          <div class="modalTitle">DANH SÁCH ĐÃ CHỌN</div>
+          <div class="modalSub">Copy danh sách để làm báo giá / đối chiếu</div>
+        </div>
+        <button class="iconBtn" id="btnClosePicked" title="Đóng">✕</button>
+      </div>
+
+      <div class="modalBody">
+        <div class="tableWrap">
+          <table id="pickedTable">
+            <thead>
+              <tr>
+                <th>id</th><th>oem</th><th>oem_alt</th><th>name</th><th>brand</th><th>category</th><th class="colNum">price</th>
+              </tr>
+            </thead>
+            <tbody id="pickedTbody"></tbody>
+          </table>
+        </div>
+
+        <div class="modalActions">
+          <button class="btn ghost" id="btnCopyPicked" type="button">Copy (TSV)</button>
+          <div class="grow"></div>
+          <button class="btn dark" id="btnClosePicked2" type="button">Đóng</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPORT MODAL -->
+  <div class="modalOverlay hidden" id="importModal">
+    <div class="modal big">
+      <div class="modalHead">
+        <div>
+          <div class="modalTitle">NHẬP HÀNG</div>
+          <div class="modalSub">Ghi vào STOCK + TXNS (type=IMPORT)</div>
+        </div>
+        <button class="iconBtn" id="btnCloseImport" title="Đóng">✕</button>
+      </div>
+
+      <div class="modalBody">
+        <div class="formGrid">
+          <label class="field">
+            <span>Loc</span>
+            <input id="importLoc" readonly />
+          </label>
+          <label class="field">
+            <span>Actor</span>
+            <input id="importActor" placeholder="vd: admin" />
+          </label>
+          <label class="field">
+            <span>Note</span>
+            <input id="importNote" placeholder="ghi chú nhập hàng..." />
+          </label>
+        </div>
+
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>id</th><th>name</th><th class="colNum">qty (+)</th><th class="colNum">price</th>
+              </tr>
+            </thead>
+            <tbody id="importTbody"></tbody>
+          </table>
+        </div>
+
+        <div class="modalActions">
+          <button class="btn ghost" id="btnImportFillPrice" type="button">Lấy price từ PRODUCTS</button>
+          <div class="grow"></div>
+          <button class="btn dark" id="btnDoImport" type="button">Ghi NHẬP</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPORT MODAL -->
+  <div class="modalOverlay hidden" id="exportModal">
+    <div class="modal big">
+      <div class="modalHead">
+        <div>
+          <div class="modalTitle">XUẤT HÀNG / TẠO HÓA ĐƠN</div>
+          <div class="modalSub">Ghi BILLS + BILL_ITEMS + TXNS và trừ STOCK</div>
+        </div>
+        <button class="iconBtn" id="btnCloseExport" title="Đóng">✕</button>
+      </div>
+
+      <div class="modalBody">
+        <div class="formGrid">
+          <label class="field">
+            <span>Loc</span>
+            <input id="exportLoc" readonly />
+          </label>
+          <label class="field">
+            <span>Actor</span>
+            <input id="exportActor" placeholder="vd: admin" />
+          </label>
+          <label class="field">
+            <span>Note</span>
+            <input id="exportNote" placeholder="ghi chú bán hàng..." />
+          </label>
+        </div>
+
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>id</th><th>name</th><th class="colNum">qty (-)</th><th class="colNum">price</th><th class="colNum">line_total</th>
+              </tr>
+            </thead>
+            <tbody id="exportTbody"></tbody>
+          </table>
+        </div>
+
+        <div class="modalActions">
+          <div class="pill">Tổng: <b id="exportTotal">0</b></div>
+          <div class="grow"></div>
+          <button class="btn ghost" id="btnExportFillPrice" type="button">Lấy price từ PRODUCTS</button>
+          <button class="btn red" id="btnDoExport" type="button">TẠO HÓA ĐƠN</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
