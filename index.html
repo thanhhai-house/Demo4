@@ -19,6 +19,7 @@
     <div class="topActions">
       <button class="pillBtn active" id="btnKho">KHO</button>
       <button class="pillBtn" id="btnStore">CỬA HÀNG</button>
+      <button class="pillBtn" id="btnAddProduct">+ THÊM SP</button>
       <span class="pill" id="authState">chưa kết nối</span>
     </div>
   </header>
@@ -68,9 +69,7 @@
             </tr>
           </thead>
           <tbody id="productsTbody">
-            <tr>
-              <td colspan="10" class="emptyRow">Bấm <b>Tra cứu</b> để tải danh sách.</td>
-            </tr>
+            <tr><td colspan="10" class="emptyRow">Bấm <b>Tra cứu</b> để tải danh sách.</td></tr>
           </tbody>
         </table>
       </div>
@@ -82,12 +81,16 @@
         </div>
       </div>
     </section>
-
-    <footer class="footerPills">
-      <div class="footPill">thống kê phụ tùng • Nhập/Xuất theo OEM • Báo giá PDF •</div>
-      <div class="footPill">@2025 hải võ • Thống kê phụ tùng • Nhập/Xuất theo OEM • Báo giá PDF •</div>
-    </footer>
   </main>
+
+  <!-- ✅ FOOTER CHẠY / MARQUEE -->
+  <div class="ticker" aria-label="copyright ticker">
+    <div class="tickerTrack">
+      <div class="tickerItem">© 2025 Hải Võ • Thống kê phụ tùng • Nhập/Xuất theo OEM • Báo giá PDF •</div>
+      <div class="tickerItem">© 2025 Hải Võ • Thống kê phụ tùng • Nhập/Xuất theo OEM • Báo giá PDF •</div>
+      <div class="tickerItem">© 2025 Hải Võ • Thống kê phụ tùng • Nhập/Xuất theo OEM • Báo giá PDF •</div>
+    </div>
+  </div>
 
   <!-- IMAGE PREVIEW MODAL -->
   <div class="modalOverlay hidden" id="imgModal">
@@ -145,32 +148,21 @@
       <div class="modalHead">
         <div>
           <div class="modalTitle">NHẬP HÀNG</div>
-          <div class="modalSub">Ghi vào STOCK + TXNS (type=IMPORT)</div>
+          <div class="modalSub">Ghi STOCK + TXNS (IMPORT)</div>
         </div>
         <button class="iconBtn" id="btnCloseImport" title="Đóng">✕</button>
       </div>
 
       <div class="modalBody">
         <div class="formGrid">
-          <label class="field">
-            <span>Loc</span>
-            <input id="importLoc" readonly />
-          </label>
-          <label class="field">
-            <span>Actor</span>
-            <input id="importActor" placeholder="vd: admin" />
-          </label>
-          <label class="field">
-            <span>Note</span>
-            <input id="importNote" placeholder="ghi chú nhập hàng..." />
-          </label>
+          <label class="field"><span>Loc</span><input id="importLoc" readonly /></label>
+          <label class="field"><span>Actor</span><input id="importActor" placeholder="vd: admin" /></label>
+          <label class="field"><span>Note</span><input id="importNote" placeholder="ghi chú..." /></label>
         </div>
 
         <div class="tableWrap">
           <table>
-            <thead>
-              <tr><th>id</th><th>name</th><th class="colNum">qty (+)</th><th class="colNum">price</th></tr>
-            </thead>
+            <thead><tr><th>id</th><th>name</th><th class="colNum">qty (+)</th><th class="colNum">price</th></tr></thead>
             <tbody id="importTbody"></tbody>
           </table>
         </div>
@@ -197,25 +189,14 @@
 
       <div class="modalBody">
         <div class="formGrid">
-          <label class="field">
-            <span>Loc</span>
-            <input id="exportLoc" readonly />
-          </label>
-          <label class="field">
-            <span>Actor</span>
-            <input id="exportActor" placeholder="vd: admin" />
-          </label>
-          <label class="field">
-            <span>Note</span>
-            <input id="exportNote" placeholder="ghi chú bán hàng..." />
-          </label>
+          <label class="field"><span>Loc</span><input id="exportLoc" readonly /></label>
+          <label class="field"><span>Actor</span><input id="exportActor" placeholder="vd: admin" /></label>
+          <label class="field"><span>Note</span><input id="exportNote" placeholder="ghi chú..." /></label>
         </div>
 
         <div class="tableWrap">
           <table>
-            <thead>
-              <tr><th>id</th><th>name</th><th class="colNum">qty (-)</th><th class="colNum">price</th><th class="colNum">line_total</th></tr>
-            </thead>
+            <thead><tr><th>id</th><th>name</th><th class="colNum">qty (-)</th><th class="colNum">price</th><th class="colNum">line_total</th></tr></thead>
             <tbody id="exportTbody"></tbody>
           </table>
         </div>
@@ -225,6 +206,50 @@
           <div class="grow"></div>
           <button class="btn ghost" id="btnExportFillPrice" type="button">Lấy price từ PRODUCTS</button>
           <button class="btn red" id="btnDoExport" type="button">TẠO HÓA ĐƠN</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD PRODUCT MODAL -->
+  <div class="modalOverlay hidden" id="addProductModal">
+    <div class="modal big">
+      <div class="modalHead">
+        <div>
+          <div class="modalTitle">THÊM / SỬA SẢN PHẨM</div>
+          <div class="modalSub">Ghi vào sheet PRODUCTS (id là khóa)</div>
+        </div>
+        <button class="iconBtn" id="btnCloseAddProduct" title="Đóng">✕</button>
+      </div>
+
+      <div class="modalBody">
+        <div class="formGrid">
+          <label class="field"><span>id *</span><input id="p_id" placeholder="vd: P001" /></label>
+          <label class="field"><span>oem</span><input id="p_oem" /></label>
+          <label class="field"><span>oem_alt</span><input id="p_oem_alt" /></label>
+        </div>
+
+        <div class="formGrid">
+          <label class="field"><span>name</span><input id="p_name" /></label>
+          <label class="field"><span>brand</span><input id="p_brand" /></label>
+          <label class="field"><span>category</span><input id="p_category" /></label>
+        </div>
+
+        <div class="formGrid">
+          <label class="field"><span>price</span><input id="p_price" type="number" min="0" step="1" /></label>
+          <label class="field"><span>image_url</span><input id="p_image_url" placeholder="https://...jpg/png" /></label>
+          <label class="field"><span>image_file_id</span><input id="p_image_file_id" placeholder="Drive file id" /></label>
+        </div>
+
+        <label class="field">
+          <span>desc</span>
+          <input id="p_desc" placeholder="mô tả..." />
+        </label>
+
+        <div class="modalActions">
+          <button class="btn ghost" id="btnClearProduct" type="button">Xóa form</button>
+          <div class="grow"></div>
+          <button class="btn dark" id="btnSaveProduct" type="button">Lưu PRODUCT</button>
         </div>
       </div>
     </div>
