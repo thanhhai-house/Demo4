@@ -1,7 +1,7 @@
 const $ = (id) => document.getElementById(id);
 
 /** ✅ DÁN WEBAPP URL /exec Ở ĐÂY */
-const API_URL = "https://script.google.com/macros/s/AKfycbxNTXwlpT94aqWFy_Kr6Vkt0mz994LuS2AGbLduWrmxq7RDfWGkOXRZHuyEWoBzKsU/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwQcOtU6TUbmWrK69o-EUWi7BGBxNas2Q8Hba9xdIRder5dMj5hMvUHKILJJuO-CjE/exec";
 
 const state = {
   mode: "KHO",
@@ -42,7 +42,6 @@ function escapeHtml(str){
     .replaceAll("'","&#039;");
 }
 
-/** image_url ưu tiên, nếu không có thì image_file_id (Drive thumbnail) */
 function getProductImageSrc(p) {
   const url = String(p.image_url ?? "").trim();
   if (url) return url;
@@ -51,27 +50,26 @@ function getProductImageSrc(p) {
   return "";
 }
 
-/************ API (IMPORTANT: text/plain để tránh preflight -> hết Failed to fetch) ************/
+/** IMPORTANT: text/plain => tránh preflight => hết Failed to fetch */
 async function api(action, payload = {}) {
   const url = String(API_URL || "").trim();
   if (!url || url === "PASTE_YOUR_WEBAPP_URL_HERE") throw new Error("Chưa dán API_URL trong app.js");
 
   const res = await fetch(url, {
     method: "POST",
-    // ✅ KHÔNG set application/json => tránh OPTIONS preflight
     headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify({ action, payload }),
   });
 
   let data;
   try { data = await res.json(); }
-  catch { throw new Error("API trả về không phải JSON. Kiểm tra WebApp URL / deploy Anyone."); }
+  catch { throw new Error("API không trả JSON. Kiểm tra WebApp URL / deploy Anyone."); }
 
   if (!data.ok) throw new Error(data.error || "API error");
   return data;
 }
 
-/************ MODAL UTILS ************/
+/************ MODAL ************/
 function openModal(id){ $(id).classList.remove("hidden"); }
 function closeModal(id){ $(id).classList.add("hidden"); }
 function bindOverlayClose(id){
@@ -82,7 +80,6 @@ function bindOverlayClose(id){
 /************ IMAGE MODAL ************/
 $("btnCloseImg").onclick = () => closeModal("imgModal");
 bindOverlayClose("imgModal");
-
 function openImagePreview(p){
   const src = getProductImageSrc(p);
   if(!src) return alert("Sản phẩm chưa có image_url / image_file_id");
@@ -93,12 +90,8 @@ function openImagePreview(p){
 }
 
 /************ PICKED ************/
-function updatePickedUI(){
-  $("picked").textContent = String(state.pickedIds.size);
-}
-function getPickedProducts(){
-  return state.products.filter(p => state.pickedIds.has(String(p.id ?? "")));
-}
+function updatePickedUI(){ $("picked").textContent = String(state.pickedIds.size); }
+function getPickedProducts(){ return state.products.filter(p => state.pickedIds.has(String(p.id ?? ""))); }
 function syncCheckAll(){
   const rows = Array.from(document.querySelectorAll(".rowCheck"));
   $("checkAll").checked = rows.length>0 && rows.every(x=>x.checked);
@@ -210,6 +203,7 @@ function renderPickedTable(){
     tbody.appendChild(tr);
   });
 }
+
 $("btnViewPicked").onclick = ()=>{ openModal("pickedModal"); renderPickedTable(); };
 $("btnBaoGia").onclick = ()=>{ openModal("pickedModal"); renderPickedTable(); };
 $("btnClosePicked").onclick = ()=> closeModal("pickedModal");
@@ -235,6 +229,7 @@ $("btnClearPicked").onclick = ()=>{
 /************ IMPORT MODAL ************/
 $("btnCloseImport").onclick = ()=> closeModal("importModal");
 bindOverlayClose("importModal");
+
 $("btnImportFillPrice").onclick = ()=>{
   const map = new Map(state.products.map(p=>[String(p.id??""), p]));
   document.querySelectorAll("#importTbody .price").forEach(inp=>{
@@ -247,8 +242,9 @@ function openImportModal(){
   const picked = getPickedProducts();
   if(picked.length===0) return alert("Bạn chưa tick sản phẩm nào.");
   $("importLoc").value = locFromMode();
-  $("importActor").value = "";
+  $("importActor").value = "admin";
   $("importNote").value = "";
+
   const tbody = $("importTbody");
   tbody.innerHTML = "";
   picked.forEach(p=>{
@@ -288,7 +284,7 @@ $("btnDoImport").onclick = async ()=>{
     if(items.length===0) return alert("Không có qty > 0");
 
     await api("stock.import",{loc, actor, note, items});
-    alert("Nhập hàng OK (đã ghi STOCK + TXNS).");
+    alert("Nhập hàng OK.");
     closeModal("importModal");
   }catch(e){
     alert(e.message);
@@ -324,7 +320,7 @@ function openExportModal(){
   const picked = getPickedProducts();
   if(picked.length===0) return alert("Bạn chưa tick sản phẩm nào.");
   $("exportLoc").value = locFromMode();
-  $("exportActor").value = "";
+  $("exportActor").value = "admin";
   $("exportNote").value = "";
 
   const tbody = $("exportTbody");
@@ -372,6 +368,47 @@ $("btnDoExport").onclick = async ()=>{
     const r = await api("bill.create",{loc, actor, note, items});
     alert(`Xuất hàng OK. Bill: ${r.data.bill_id} | Total: ${money(r.data.total)}`);
     closeModal("exportModal");
+  }catch(e){
+    alert(e.message);
+  }
+};
+
+/************ ADD PRODUCT MODAL ************/
+function clearProductForm(){
+  ["p_id","p_oem","p_oem_alt","p_name","p_brand","p_category","p_price","p_desc","p_image_url","p_image_file_id"]
+    .forEach(id=> $(id).value = "");
+}
+
+$("btnAddProduct").onclick = ()=>{
+  clearProductForm();
+  openModal("addProductModal");
+};
+$("btnCloseAddProduct").onclick = ()=> closeModal("addProductModal");
+bindOverlayClose("addProductModal");
+$("btnClearProduct").onclick = clearProductForm;
+
+$("btnSaveProduct").onclick = async ()=>{
+  try{
+    const id = $("p_id").value.trim();
+    if(!id) return alert("Thiếu id");
+
+    const payload = {
+      id,
+      oem: $("p_oem").value.trim(),
+      oem_alt: $("p_oem_alt").value.trim(),
+      name: $("p_name").value.trim(),
+      brand: $("p_brand").value.trim(),
+      category: $("p_category").value.trim(),
+      price: $("p_price").value === "" ? "" : Number($("p_price").value),
+      desc: $("p_desc").value.trim(),
+      image_url: $("p_image_url").value.trim(),
+      image_file_id: $("p_image_file_id").value.trim(),
+    };
+
+    await api("products.upsert", payload);
+    alert("Lưu sản phẩm OK.");
+    closeModal("addProductModal");
+    await loadProducts();
   }catch(e){
     alert(e.message);
   }
