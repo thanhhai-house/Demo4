@@ -1,7 +1,7 @@
 const $ = (id) => document.getElementById(id);
 
 /** ✅ DÁN WEBAPP URL /exec Ở ĐÂY */
-const API_URL = "https://script.google.com/macros/s/AKfycbwQcOtU6TUbmWrK69o-EUWi7BGBxNas2Q8Hba9xdIRder5dMj5hMvUHKILJJuO-CjE/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyWl2B8BiMYYP6ur1aWHGGXNil6olsCvOgjfBujIgkzM8vJnLvz9bBrgJk-0BBwoy8/exec";
 
 const state = {
   mode: "KHO",
@@ -9,6 +9,8 @@ const state = {
   filtered: [],
   pickedIds: new Set(),
 };
+
+let addProductImageDataUrl = ""; // base64 ảnh khi chọn file
 
 function setAuthState(ok, msg) {
   const el = $("authState");
@@ -50,7 +52,7 @@ function getProductImageSrc(p) {
   return "";
 }
 
-/** IMPORTANT: text/plain => tránh preflight => hết Failed to fetch */
+/** IMPORTANT: text/plain => tránh preflight (Failed to fetch) */
 async function api(action, payload = {}) {
   const url = String(API_URL || "").trim();
   if (!url || url === "PASTE_YOUR_WEBAPP_URL_HERE") throw new Error("Chưa dán API_URL trong app.js");
@@ -82,7 +84,7 @@ $("btnCloseImg").onclick = () => closeModal("imgModal");
 bindOverlayClose("imgModal");
 function openImagePreview(p){
   const src = getProductImageSrc(p);
-  if(!src) return alert("Sản phẩm chưa có image_url / image_file_id");
+  if(!src) return alert("Sản phẩm chưa có ảnh");
   $("imgTitle").textContent = `Ảnh: ${p.id ?? ""}`;
   $("imgSub").textContent = `${p.name ?? ""}`;
   $("imgPreview").src = src;
@@ -373,10 +375,13 @@ $("btnDoExport").onclick = async ()=>{
   }
 };
 
-/************ ADD PRODUCT MODAL ************/
+/************ ADD PRODUCT MODAL (AUTO ID + UPLOAD DRIVE) ************/
 function clearProductForm(){
   ["p_id","p_oem","p_oem_alt","p_name","p_brand","p_category","p_price","p_desc","p_image_url","p_image_file_id"]
     .forEach(id=> $(id).value = "");
+  addProductImageDataUrl = "";
+  $("p_image_file").value = "";
+  $("p_image_preview").src = "";
 }
 
 $("btnAddProduct").onclick = ()=>{
@@ -387,13 +392,32 @@ $("btnCloseAddProduct").onclick = ()=> closeModal("addProductModal");
 bindOverlayClose("addProductModal");
 $("btnClearProduct").onclick = clearProductForm;
 
+// file -> preview + dataURL
+$("p_image_file").addEventListener("change", (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) {
+    addProductImageDataUrl = "";
+    $("p_image_preview").src = "";
+    return;
+  }
+  if (!file.type.startsWith("image/")) return alert("File không phải ảnh");
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    addProductImageDataUrl = String(reader.result || "");
+    $("p_image_preview").src = addProductImageDataUrl;
+  };
+  reader.readAsDataURL(file);
+});
+
 $("btnSaveProduct").onclick = async ()=>{
   try{
-    const id = $("p_id").value.trim();
-    if(!id) return alert("Thiếu id");
+    // ID có thể để trống => server tự tạo
+    let id = $("p_id").value.trim();
 
-    const payload = {
-      id,
+    // 1) Lưu PRODUCT trước để lấy ID (nếu id trống)
+    const basePayload = {
+      id: id || "", // server tự tạo nếu rỗng
       oem: $("p_oem").value.trim(),
       oem_alt: $("p_oem_alt").value.trim(),
       name: $("p_name").value.trim(),
@@ -405,8 +429,28 @@ $("btnSaveProduct").onclick = async ()=>{
       image_file_id: $("p_image_file_id").value.trim(),
     };
 
-    await api("products.upsert", payload);
-    alert("Lưu sản phẩm OK.");
+    const up1 = await api("products.upsert", basePayload);
+    id = up1.data.id; // ✅ ID chắc chắn có rồi
+    $("p_id").value = id;
+
+    // 2) Nếu có ảnh chọn -> upload Drive -> update lại product
+    if (addProductImageDataUrl) {
+      const img = await api("image.upload", { data_url: addProductImageDataUrl, product_id: id });
+      const image_file_id = img.data.file_id;
+      const image_url = img.data.thumbnail_url;
+
+      $("p_image_file_id").value = image_file_id;
+      $("p_image_url").value = image_url;
+
+      await api("products.upsert", {
+        ...basePayload,
+        id,
+        image_file_id,
+        image_url
+      });
+    }
+
+    alert(`Lưu sản phẩm OK. ID: ${id}`);
     closeModal("addProductModal");
     await loadProducts();
   }catch(e){
