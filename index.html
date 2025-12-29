@@ -19,8 +19,7 @@
     <div class="topActions">
       <button class="pillBtn active" id="btnKho">KHO</button>
       <button class="pillBtn" id="btnStore">CỬA HÀNG</button>
-      <button class="pillBtn" id="btnToken">TOKEN</button>
-      <button class="iconBtn" id="btnMenu" title="Menu">☰</button>
+      <span class="pill" id="authState">chưa kết nối</span>
     </div>
   </header>
 
@@ -70,9 +69,7 @@
           </thead>
           <tbody id="productsTbody">
             <tr>
-              <td colspan="10" class="emptyRow">
-                Chưa có dữ liệu. Bấm <b>TOKEN</b> để nhập token, rồi bấm <b>Tra cứu</b>.
-              </td>
+              <td colspan="10" class="emptyRow">Bấm <b>Tra cứu</b> để tải danh sách.</td>
             </tr>
           </tbody>
         </table>
@@ -91,37 +88,6 @@
       <div class="footPill">@2025 hải võ • Thống kê phụ tùng • Nhập/Xuất theo OEM • Báo giá PDF •</div>
     </footer>
   </main>
-
-  <!-- TOKEN MODAL (chỉ nhập token) -->
-  <div class="modalOverlay hidden" id="tokenModal">
-    <div class="modal">
-      <div class="modalHead">
-        <div>
-          <div class="modalTitle">TOKEN / KẾT NỐI</div>
-          <div class="modalSub">WebApp URL đã được gắn sẵn trong app.js • bạn chỉ cần token</div>
-        </div>
-        <button class="iconBtn" id="btnCloseToken" title="Đóng">✕</button>
-      </div>
-
-      <div class="modalBody">
-        <label class="field">
-          <span>Token (mật khẩu)</span>
-          <div class="pwRow">
-            <input id="token" type="password" placeholder="vd: abc123" />
-            <button class="btn ghost" id="btnToggleToken" type="button">Hiện</button>
-          </div>
-          <small>Lấy token trong sheet <b>TOKENS</b></small>
-        </label>
-
-        <div class="modalActions">
-          <span class="pill" id="authState">chưa kết nối</span>
-          <div class="grow"></div>
-          <button class="btn ghost" id="btnClearToken" type="button">Xóa token</button>
-          <button class="btn dark" id="btnConnect" type="button">Xác nhận</button>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- IMAGE PREVIEW MODAL -->
   <div class="modalOverlay hidden" id="imgModal">
@@ -203,9 +169,7 @@
         <div class="tableWrap">
           <table>
             <thead>
-              <tr>
-                <th>id</th><th>name</th><th class="colNum">qty (+)</th><th class="colNum">price</th>
-              </tr>
+              <tr><th>id</th><th>name</th><th class="colNum">qty (+)</th><th class="colNum">price</th></tr>
             </thead>
             <tbody id="importTbody"></tbody>
           </table>
@@ -250,9 +214,7 @@
         <div class="tableWrap">
           <table>
             <thead>
-              <tr>
-                <th>id</th><th>name</th><th class="colNum">qty (-)</th><th class="colNum">price</th><th class="colNum">line_total</th>
-              </tr>
+              <tr><th>id</th><th>name</th><th class="colNum">qty (-)</th><th class="colNum">price</th><th class="colNum">line_total</th></tr>
             </thead>
             <tbody id="exportTbody"></tbody>
           </table>
